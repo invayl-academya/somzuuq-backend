@@ -1,6 +1,7 @@
 import asyncHandler from "../middlewares/asyncHandler.js";
 import User from "../models/userModel.js";
 import generateToken from "../utils/generateToken.js";
+import validator from "validator";
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -29,7 +30,7 @@ export const login = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(402);
-    throw new Error("try again , wrong credentials");
+    throw new Error("try again , wrong user credentials");
   }
 });
 
@@ -38,6 +39,20 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   if ((!name || !email, !username || !password)) {
     throw new Error("please fill All fields ");
+  }
+
+  if (
+    !validator.isStrongPassword(password, {
+      minLength: 10,
+      minLowercase: 1,
+      minUppercase: 1,
+      minSymbols: 1, // # @
+      minNumbers: 1,
+    })
+  ) {
+    throw new Error(
+      "password should have at least 10 charector one uppercase and 1 special character"
+    );
   }
 
   const userExist = await User.findOne({ email });
@@ -71,6 +86,14 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Failed to create user , try again");
   }
 });
+
+export const logoutUser = async (req, res) => {
+  res.clearCookie("jwt");
+  res.status(201).json({
+    success: true,
+    message: "Logged Out Succesfuly",
+  });
+};
 
 export const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);

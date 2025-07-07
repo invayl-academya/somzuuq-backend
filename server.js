@@ -8,14 +8,27 @@ import colors from "colors";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middlewares/errors.js";
+import productRouter from "./routes/productRoutes.js";
+import morgan from "morgan";
+import cartRouter from "./routes/cartRoutes.js";
 
 const app = express(); // initialize
 
 const PORT = process.env.PORT;
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Cache-control",
+    "no-store , no-cache , must-revalidate , private"
+  );
+  next();
+});
+
 db();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(morgan("dev"));
 
 app.use(
   cors({
@@ -25,6 +38,8 @@ app.use(
 );
 
 app.use("/api/users", userRouter);
+app.use("/api/products", productRouter);
+app.use("/api/cart", cartRouter);
 
 app.use(notFound);
 app.use(errorHandler);
