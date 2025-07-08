@@ -111,3 +111,134 @@ export const getCartItems = asyncHandler(async (req, res) => {
     });
   }
 });
+
+export const updateCartQty = asyncHandler(async (req, res) => {
+  try {
+    const { userId, productId, qty } = req.body;
+
+    if (!userId || !productId || qty <= 0) {
+      return res.status(403).json({
+        success: false,
+        message: "invalid Data ",
+      });
+    }
+
+    const cart = await Cart.findOne({ userId });
+
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "cart not found",
+      });
+    }
+
+    const currentProductIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (currentProductIndex === -1) {
+      return res.status(403).json({
+        success: false,
+        message: "cart item not found",
+      });
+    }
+
+    cart.items[currentProductIndex].qty = qty;
+    await cart.save();
+
+    await cart.populate({
+      path: "items.productId",
+      select: "title , image , price , salePrice , category , brand",
+    });
+
+    const populateCartItems = cart.items.map((item) => ({
+      productId: item.productId ? item.productId._id : null,
+      image: item.productId ? item.productId.image : null,
+      title: item.productId ? item.productId.title : "",
+      price: item.productId ? item.productId.price : null,
+      salePrice: item.productId ? item.productId.salePrice : null,
+      countInStock: item.productId ? item.productId.countInStock : null,
+      category: item.productId ? item.productId.category : null,
+      brand: item.productId ? item.productId.brand : null,
+      qty: item.qty,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "item fetched ",
+      cart: {
+        ...cart._doc,
+        items: populateCartItems,
+      },
+    });
+  } catch (error) {
+    console.log("error occur", error);
+    res.status(500).json({
+      success: false,
+      message: `Error Occur / faild to Add , ${error.message}`,
+    });
+  }
+});
+
+export const deleteCart = asyncHandler(async (req, res) => {
+  try {
+    const { userId, productId } = req.params;
+
+    if (!userId || !productId) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid data - not Found!",
+      });
+    }
+
+    const cart = await Cart.findOne({ userId }).populate({
+      path: "items.productId",
+      select: "title , image , price , salePrice , category , brand",
+    });
+
+    if (!cart) {
+      return res.status(403).json({
+        success: false,
+        message: "sorry cart - not Found!",
+      });
+    }
+
+    cart.items = cart.items.filter(
+      (item) => item.productId._id.toString() !== productId
+    );
+
+    await cart.save();
+
+    await cart.populate({
+      path: "items.productId",
+      select: "title , image , price , salePrice , category , brand",
+    });
+
+    const populateCartItems = cart.items.map((item) => ({
+      productId: item.productId ? item.productId._id : null,
+      image: item.productId ? item.productId.image : null,
+      title: item.productId ? item.productId.title : "",
+      price: item.productId ? item.productId.price : null,
+      salePrice: item.productId ? item.productId.salePrice : null,
+      countInStock: item.productId ? item.productId.countInStock : null,
+      category: item.productId ? item.productId.category : null,
+      brand: item.productId ? item.productId.brand : null,
+      qty: item.qty,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "item fetched ",
+      cart: {
+        ...cart._doc,
+        items: populateCartItems,
+      },
+    });
+  } catch (error) {
+    console.log("error occur", error);
+    res.status(500).json({
+      success: false,
+      message: `Error Occur / faild to Add , ${error.message}`,
+    });
+  }
+});
