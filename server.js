@@ -11,6 +11,7 @@ import { errorHandler, notFound } from "./middlewares/errors.js";
 import productRouter from "./routes/productRoutes.js";
 import morgan from "morgan";
 import cartRouter from "./routes/cartRoutes.js";
+import orderRouter from "./routes/orderRoutes.js";
 
 const app = express(); // initialize
 
@@ -40,6 +41,7 @@ app.use(
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/orders", orderRouter);
 
 app.use(notFound);
 app.use(errorHandler);
