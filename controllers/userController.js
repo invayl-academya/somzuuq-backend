@@ -1,4 +1,5 @@
 import asyncHandler from "../middlewares/asyncHandler.js";
+import Order from "../models/orderModel.js";
 import User from "../models/userModel.js";
 import generateToken from "../utils/generateToken.js";
 import validator from "validator";
@@ -94,6 +95,43 @@ export const logoutUser = async (req, res) => {
     message: "Logged Out Succesfuly",
   });
 };
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}).lean();
+
+  const userIds = users.map((u) => u._id);
+
+  // userIds = ["6852772d6efa16263a6f64f1" , "6852772d6efa16263a6f64f1" , "sfrt43557"]
+
+  const orders = await Order.find({ user: { $in: userIds } })
+    .populate("user", "name email")
+    .populate("orderItems.product", "name price image ")
+    .lean();
+
+  const userOrderMap = {};
+
+  orders.forEach((order) => {
+    const userId = order.user._id.toString();
+
+    if (!userOrderMap[userId]) {
+      userOrderMap[userId] = [];
+    }
+    userOrderMap[userId].push(order);
+  });
+
+  // atch orders to user
+  const userWithOrders = users.map((user) => {
+    const userId = user._id.toString();
+
+    return {
+      ...user,
+      orders: userOrderMap[userId] || [],
+    };
+  });
+
+  // res.json(users);
+  res.json(userWithOrders);
+});
 
 export const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);

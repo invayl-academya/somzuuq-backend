@@ -12,6 +12,7 @@ import productRouter from "./routes/productRoutes.js";
 import morgan from "morgan";
 import cartRouter from "./routes/cartRoutes.js";
 import orderRouter from "./routes/orderRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js";
 
 const app = express(); // initialize
 
@@ -42,6 +43,7 @@ app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/reviews", reviewRouter);
 
 app.use("/api/config/paypal", (req, res) => {
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID });

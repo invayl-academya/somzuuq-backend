@@ -66,6 +66,15 @@ export const getMyOrders = asyncHandler(async (req, res) => {
   res.status(200).json(orders);
 });
 
+// @acess // Admins
+export const getAllOrders = asyncHandler(async (req, res) => {
+  const orders = await Order.find({})
+    .populate("user", "name email")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({ count: orders.length, orders });
+});
+
 export const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id).populate(
     "user",
