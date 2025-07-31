@@ -151,3 +151,84 @@ export const getUserProfile = asyncHandler(async (req, res) => {
     throw new Error("User Not Found ");
   }
 });
+
+export const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    if (req.body.email && !validator.isEmail(req.body.email)) {
+      res.status(404);
+      throw new Error("invalid Email");
+    }
+
+    if (
+      req.body.password &&
+      !validator.isStrongPassword(req.body.password, {
+        minLength: 10,
+        minLowercase: 1,
+        minUppercase: 1,
+        minSymbols: 1, // # @
+        minNumbers: 1,
+      })
+    ) {
+      res.status(400);
+      throw new Error(
+        "password should have at least 10 charector one uppercase and 1 special character"
+      );
+    }
+
+    user.name = req.body.name || user.name;
+    // user.email = req.body.email || user.email;
+    user.username = req.body.username || user.username;
+
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      username: updatedUser.username,
+      isAdmin: updatedUser.isAdmin,
+    });
+  } else {
+    res.status(404);
+    throw new Error("user not found");
+  }
+});
+
+export const updateUserRole = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User Not Found");
+  }
+
+  user.isAdmin = !user.isAdmin;
+
+  await user.save();
+
+  res.json({ message: "user Role updated", user });
+});
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (user) {
+    if (user.isAdmin) {
+      res.status(400);
+      throw new Error("cannot delete Admin user");
+    }
+
+    await User.deleteOne({ _id: user._id });
+    res.json({ message: "Successfully removed user" });
+  } else {
+    res.status(404);
+    throw new Error("user not found");
+  }
+});
