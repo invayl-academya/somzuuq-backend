@@ -1,5 +1,6 @@
 import asyncHandler from "../middlewares/asyncHandler.js";
 import Order from "../models/orderModel.js";
+import Product from "../models/productModel.js";
 import User from "../models/userModel.js";
 import generateToken from "../utils/generateToken.js";
 import validator from "validator";
@@ -12,7 +13,7 @@ export const login = asyncHandler(async (req, res) => {
   if (!user)
     return res.json({
       success: false,
-      message: "Not Found user register first",
+      message: "Not Found user Login or register first",
     });
 
   if (user && (await user.matchPasssword(password))) {
@@ -232,3 +233,41 @@ export const deleteUser = asyncHandler(async (req, res) => {
     throw new Error("user not found");
   }
 });
+
+export const getAdminDashboardStats = async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      deliveredOrders,
+      totalReviews,
+    ] = await Promise.all([
+      User.countDocuments(),
+      Product.countDocuments(),
+      Order.countDocuments(),
+      Order.countDocuments({ isDelivered: true }),
+      Product.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalReviews: { $sum: { $size: "$reviews" } },
+          },
+        },
+      ]),
+    ]);
+
+    const totalReviewsCount = totalReviews[0]?.totalReviews || 0;
+
+    res.json({
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      deliveredOrders,
+      totalReviews: totalReviewsCount,
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({ message: "Failed to fetch admin stats" });
+  }
+};

@@ -1,6 +1,7 @@
 import express from "express";
 import {
   deleteUser,
+  getAdminDashboardStats,
   getAllUsers,
   getUserProfile,
   login,
@@ -26,5 +27,7 @@ userRouter
   .put(protect, updateUserProfile);
 userRouter.put("/role/:id", protect, admin, updateUserRole); // admin
 userRouter.delete("/:id", protect, admin, deleteUser); // admin
+
+userRouter.get("/stats", protect, admin, getAdminDashboardStats);
 
 export default userRouter;
