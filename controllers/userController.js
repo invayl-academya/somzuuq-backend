@@ -90,7 +90,13 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 export const logoutUser = async (req, res) => {
-  res.clearCookie("jwt");
+  const isProduction = process.env.NODE_ENV === "production"; // true in production
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    secure: isProduction ? true : false,
+    sameSite: isProduction ? "none" : "strict",
+    path: "/",
+  });
   res.status(201).json({
     success: true,
     message: "Logged Out Succesfuly",

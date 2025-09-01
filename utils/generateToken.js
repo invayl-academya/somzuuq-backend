@@ -6,10 +6,12 @@ const generateToken = (res, userId) => {
     expiresIn: "30d",
   });
 
+  const isProduction = process.env.NODE_ENV === "production"; // true in production
+
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // true in production
-    sameSite: "none",
+    secure: isProduction ? true : false,
+    sameSite: isProduction ? "none" : "strict",
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dys
     // domain : process.env.NODE_ENV === "production" ? "suuqlay.com" :"localhost"
   });
